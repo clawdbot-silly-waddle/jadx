@@ -167,7 +167,8 @@ public class SwitchOverStringVisitor extends AbstractVisitor implements IRegionI
 		// check for second switch
 		IContainer nextContainer = RegionUtils.getNextContainer(switchData.getMth(), switchData.getSwitchRegion());
 		if (!(nextContainer instanceof SwitchRegion)) {
-			return false;
+			// R8/D8 pattern: code already inlined in hashCode cases (no second switch)
+			return buildInlineCases(switchData);
 		}
 		SwitchRegion codeSwitch = (SwitchRegion) nextContainer;
 		InsnNode swInsn = BlockUtils.getLastInsnWithType(codeSwitch.getHeader(), InsnType.SWITCH);
@@ -250,6 +251,25 @@ public class SwitchOverStringVisitor extends AbstractVisitor implements IRegionI
 		}
 		switchData.setCodeSwitch(codeSwitch);
 		switchData.setNumArg(numArg);
+		switchData.setNewCases(newCases);
+		return true;
+	}
+
+	private boolean buildInlineCases(SwitchData switchData) {
+		List<CaseData> cases = switchData.getCases();
+		if (cases.isEmpty()) {
+			return false;
+		}
+		for (CaseData caseData : cases) {
+			if (caseData.getCode() == null || caseData.getStrValues().isEmpty()) {
+				return false;
+			}
+		}
+		List<SwitchRegion.CaseInfo> newCases = new ArrayList<>();
+		for (CaseData caseData : cases) {
+			List<Object> keys = new ArrayList<>(caseData.getStrValues());
+			newCases.add(new SwitchRegion.CaseInfo(keys, caseData.getCode()));
+		}
 		switchData.setNewCases(newCases);
 		return true;
 	}

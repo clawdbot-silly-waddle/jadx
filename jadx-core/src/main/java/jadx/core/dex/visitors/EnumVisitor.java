@@ -451,6 +451,10 @@ public class EnumVisitor extends AbstractVisitor {
 			// allow same class
 		} else if (constrCls.contains(AType.ANONYMOUS_CLASS)) {
 			// allow external class already marked as anonymous
+		} else if (constrCls.getParentClass() == cls
+				&& constrCls.getSuperClass() != null
+				&& cls.getType().equals(constrCls.getSuperClass())) {
+			// allow named inner class that extends this enum (abstract enum subclass)
 		} else {
 			return null;
 		}
