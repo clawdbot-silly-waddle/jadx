@@ -89,6 +89,10 @@ public class ConstructorVisitor extends AbstractVisitor {
 					// arg already used in another constructor instruction
 					// insert new PHI insn to merge these branched constructors results
 					instanceArg = insertPhiInsn(mth, block, instanceArg, ((ConstructorInsn) assignInsn));
+				} else if (assignInsn.getType() == InsnType.PHI) {
+					// instance defined by PHI from merged paths, use new SSAVar
+					// to avoid stealing the PHI result's SSAVar via setAssign()
+					instanceArg = instanceArg.duplicateWithNewSSAVar(mth);
 				} else {
 					InsnNode newInstInsn = removeAssignChain(mth, assignInsn, remover, InsnType.NEW_INSTANCE);
 					if (newInstInsn != null) {

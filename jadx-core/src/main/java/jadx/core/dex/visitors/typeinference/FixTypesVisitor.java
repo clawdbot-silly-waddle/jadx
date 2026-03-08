@@ -394,7 +394,7 @@ public final class FixTypesVisitor extends AbstractVisitor {
 			}
 			ArgType detailsArg = details.getArgTypes().get(k);
 			ArgType invArgType = invArg.getType();
-			ArgType resolvedType = mth.root().getTypeUtils().replaceClassGenerics(fieldType, invArgType, detailsArg);
+			ArgType resolvedType = mth.root().getTypeUtils().replaceClassGenerics(fieldType, detailsArg);
 			if (resolvedType != null && !resolvedType.equals(invArgType)) {
 				IndexInsnNode castInsn = insertUseCast(mth, (RegisterArg) invArg, resolvedType);
 				if (castInsn != null) {

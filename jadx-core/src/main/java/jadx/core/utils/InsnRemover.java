@@ -150,8 +150,13 @@ public class InsnRemover {
 		// check if all usage only in not generated instructions
 		if (allMatch(ssaVar.getUseList(),
 				arg -> arg.contains(AFlag.DONT_GENERATE) || (InsnUtils.contains(arg.getParentInsn(), AFlag.DONT_GENERATE)))) {
-			for (RegisterArg arg : ssaVar.getUseList()) {
-				arg.resetSSAVar();
+			for (RegisterArg arg : new ArrayList<>(ssaVar.getUseList())) {
+				InsnNode parentInsn = arg.getParentInsn();
+				if (parentInsn != null && parentInsn.getType() == InsnType.PHI) {
+					((PhiInsn) parentInsn).removeArg(arg);
+				} else {
+					arg.resetSSAVar();
+				}
 			}
 			mth.removeSVar(ssaVar);
 			return;
