@@ -100,6 +100,10 @@ public class ClassGen {
 		if (cls.contains(AFlag.PACKAGE_INFO)) {
 			return makePackageInfo();
 		}
+		if (isRemovedSyntheticClass()) {
+			cls.add(AFlag.DONT_GENERATE);
+			return ICodeInfo.EMPTY;
+		}
 		ICodeWriter clsBody = cls.root().makeCodeWriter();
 		addClassCode(clsBody);
 
@@ -393,6 +397,26 @@ public class ClassGen {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Synthetic class left with no generated members after its methods were inlined into callers
+	 * (e.g. R8 static trampolines). ClassModifier can't drop it: the methods are still present in
+	 * the class when it runs and only get inlined away later.
+	 */
+	private boolean isRemovedSyntheticClass() {
+		if (!cls.getAccessFlags().isSynthetic()) {
+			return false;
+		}
+		if (isFieldsPresents() || isInnerClassesPresents()) {
+			return false;
+		}
+		for (MethodNode mth : cls.getMethods()) {
+			if (!mth.contains(AFlag.DONT_GENERATE) && !skipMethod(mth)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public void addMethodCode(ICodeWriter code, MethodNode mth) throws CodegenException {
